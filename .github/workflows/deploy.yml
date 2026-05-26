@@ -1,0 +1,76 @@
+name: Deploy — Frontend to GitHub Pages
+
+on:
+  push:
+    branches: [staging, main]
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write  # Required to push to gh-pages branch
+
+jobs:
+  build-and-deploy:
+    name: Build Angular & Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Node.js ──────────────────────────────────────────────────────
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # ── 3. Install dependencies ───────────────────────────────────────────────
+      - name: Install npm dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # ── 4. Inject Railway API URL ─────────────────────────────────────────────
+      # Set secret RAILWAY_API_URL in: GitHub repo → Settings → Secrets → Actions
+      # Value must include https://, e.g: https://zakat-simulator-production.up.railway.app
+      - name: Inject Railway API URL
+        working-directory: frontend
+        run: |
+          SECRET="${{ secrets.RAILWAY_API_URL }}"
+          if [ -n "$SECRET" ]; then
+            # Strip trailing slash if present
+            SECRET="${SECRET%/}"
+            # Replace placeholder: https://RAILWAY_API_URL → https://xxx.up.railway.app
+            sed -i "s|https://RAILWAY_API_URL|${SECRET}|g" \
+              src/environments/environment.production.ts
+            echo "✅ Railway API URL injected: ${SECRET}"
+          else
+            echo "⚠️  RAILWAY_API_URL secret not set — backend calls will fail"
+            echo "    Add it in: GitHub repo → Settings → Secrets and variables → Actions"
+          fi
+
+      # ── 5. Build Angular ──────────────────────────────────────────────────────
+      - name: Build Angular (production)
+        working-directory: frontend
+        run: |
+          npx ng build \
+            --configuration=production \
+            --base-href=/zakat-simulator/
+
+      # ── 6. Add 404 fallback for Angular routing ───────────────────────────────
+      - name: Copy index.html as 404.html (SPA routing fix)
+        run: cp frontend/dist/frontend/browser/index.html frontend/dist/frontend/browser/404.html
+
+      # ── 7. Deploy to GitHub Pages ─────────────────────────────────────────────
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/dist/frontend/browser
+          branch: gh-pages
+          clean: true
+
+      - name: Deployment complete
+        run: |
+          echo "🌙 Zakat Simulator deployed!"
+          echo "🔗 URL: https://aya-fekih-romdhane.github.io/zakat-simulator/"

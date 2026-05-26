@@ -1,0 +1,306 @@
+<div class="app-wrapper" [attr.dir]="ls.dir()">
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="app-header">
+    <!-- Language & Currency bar -->
+    <div class="top-bar">
+      <!-- Language switcher -->
+      <div class="lang-switcher">
+        <button [class.active]="ls.lang() === 'ar'" (click)="ls.setLang('ar')">العربية</button>
+        <button [class.active]="ls.lang() === 'fr'" (click)="ls.setLang('fr')">Français</button>
+        <button [class.active]="ls.lang() === 'en'" (click)="ls.setLang('en')">English</button>
+      </div>
+
+      <!-- Currency selector -->
+      <div class="currency-bar">
+        <span class="currency-label-text">{{ t('currency_label') }}:</span>
+        <div class="currency-select-wrap">
+          <select class="currency-select" (change)="onCurrencyChange($event)">
+            <option *ngFor="let c of currencies" [value]="c.code"
+              [selected]="c.code === selectedCurrency.code">
+              {{ c.symbol }} {{ getCurrencyName(c) }} ({{ c.code }})
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <div class="header-content">
+      <div class="bismillah">{{ t('bismillah') }}</div>
+      <h1 class="app-title">{{ t('title') }}</h1>
+      <p class="app-subtitle">{{ t('subtitle') }}</p>
+    </div>
+  </header>
+
+  <!-- ═══ QURAN BANNER ═══ -->
+  <div class="quran-banner">
+    <div class="quran-ornament">❈ ✦ ❈</div>
+    <div class="quran-slide" [class.visible]="ayatVisible">
+      <p class="quran-text">{{ ayat[currentAyatIndex].text }}</p>
+      <span class="quran-ref">{{ ayat[currentAyatIndex].ref }}</span>
+    </div>
+    <div class="quran-dots">
+      <span *ngFor="let a of ayat; let i = index"
+            class="quran-dot"
+            [class.active]="i === currentAyatIndex"
+            (click)="goToAyat(i)">
+      </span>
+    </div>
+  </div>
+
+  <!-- ═══ TABS ═══ -->
+  <nav class="tabs-nav">
+    <button *ngFor="let tab of tabs"
+      class="tab-btn"
+      [class.active]="activeTab === tab.id"
+      (click)="selectTab(tab.id)">
+      <span class="tab-icon">{{ tab.icon }}</span>
+      <span class="tab-label-ar">{{ ls.lang() === 'ar' ? tab.labelAr : tab.labelFr }}</span>
+    </button>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main-content">
+    <div class="form-card">
+
+      <!-- ── زكاة المال ── -->
+      <div *ngIf="activeTab === 'mal'" class="form-section">
+        <div class="form-header">
+          <h2>{{ t('mal_title') }}</h2>
+          <p class="form-desc">{{ t('mal_desc') }}</p>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>{{ t('cash_savings') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="malForm.cashSavings" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('bank_deposits') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="malForm.bankDeposits" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('investments') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="malForm.investments" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('debts_owed_to_you') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="malForm.debtsOwedToYou" min="0" placeholder="0">
+          </div>
+          <div class="field-group highlight-red">
+            <label>{{ t('debts_you_owe') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="malForm.debtsYouOwe" min="0" placeholder="0">
+          </div>
+          <div class="field-group gold-field">
+            <label>{{ t('gold_price') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="malForm.goldPricePerGram" min="0"
+              [placeholder]="selectedCurrency.defaultGoldPrice">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Gold & Silver ── -->
+      <div *ngIf="activeTab === 'goldsilver'" class="form-section">
+        <div class="form-header">
+          <h2>{{ t('gold_title') }}</h2>
+          <p class="form-desc">{{ t('gold_desc') }}</p>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>{{ t('gold_grams') }}</label>
+            <input type="number" [(ngModel)]="goldForm.goldGrams" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('silver_grams') }}</label>
+            <input type="number" [(ngModel)]="goldForm.silverGrams" min="0" placeholder="0">
+          </div>
+          <div class="field-group gold-field">
+            <label>{{ t('gold_price') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="goldForm.goldPricePerGram" min="0"
+              [placeholder]="selectedCurrency.defaultGoldPrice">
+          </div>
+          <div class="field-group gold-field">
+            <label>{{ t('silver_price') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="goldForm.silverPricePerGram" min="0"
+              [placeholder]="selectedCurrency.defaultSilverPrice">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tijarah ── -->
+      <div *ngIf="activeTab === 'tijarah'" class="form-section">
+        <div class="form-header">
+          <h2>{{ t('tijarah_title') }}</h2>
+          <p class="form-desc">{{ t('tijarah_desc') }}</p>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>{{ t('stock_value') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="tijarahForm.stockValue" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('cash_on_hand') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="tijarahForm.cashOnHand" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('receivables') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="tijarahForm.receivables" min="0" placeholder="0">
+          </div>
+          <div class="field-group highlight-red">
+            <label>{{ t('payables') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="tijarahForm.payables" min="0" placeholder="0">
+          </div>
+          <div class="field-group gold-field">
+            <label>{{ t('gold_price') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="tijarahForm.goldPricePerGram" min="0"
+              [placeholder]="selectedCurrency.defaultGoldPrice">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Ziraa ── -->
+      <div *ngIf="activeTab === 'ziraa'" class="form-section">
+        <div class="form-header">
+          <h2>{{ t('ziraa_title') }}</h2>
+          <p class="form-desc">{{ t('ziraa_desc') }}</p>
+        </div>
+        <div class="form-grid">
+          <div class="field-group full-width">
+            <label>{{ t('harvest_kg') }}</label>
+            <input type="number" [(ngModel)]="ziraaForm.harvestKg" min="0" placeholder="0">
+          </div>
+          <div class="field-group full-width">
+            <label class="toggle-label">{{ t('irrigation_type') }}</label>
+            <div class="irrigation-toggle">
+              <button class="irr-btn" [class.active]="ziraaForm.naturallyIrrigated"
+                (click)="ziraaForm.naturallyIrrigated = true">
+                {{ t('natural_irrigation') }}
+              </button>
+              <button class="irr-btn" [class.active]="!ziraaForm.naturallyIrrigated"
+                (click)="ziraaForm.naturallyIrrigated = false">
+                {{ t('artificial_irrigation') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Mawashi ── -->
+      <div *ngIf="activeTab === 'mawashi'" class="form-section">
+        <div class="form-header">
+          <h2>{{ t('mawashi_title') }}</h2>
+          <p class="form-desc">{{ t('mawashi_desc') }}</p>
+        </div>
+        <div class="nisab-table">
+          <div class="nisab-row"><span>{{ t('nisab_camels') }}</span></div>
+          <div class="nisab-row"><span>{{ t('nisab_cattle') }}</span></div>
+          <div class="nisab-row"><span>{{ t('nisab_sheep') }}</span></div>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>{{ t('camels') }}</label>
+            <input type="number" [(ngModel)]="mawashiForm.camels" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('cattle') }}</label>
+            <input type="number" [(ngModel)]="mawashiForm.cattle" min="0" placeholder="0">
+          </div>
+          <div class="field-group">
+            <label>{{ t('sheep') }}</label>
+            <input type="number" [(ngModel)]="mawashiForm.sheep" min="0" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Fitr ── -->
+      <div *ngIf="activeTab === 'fitr'" class="form-section">
+        <div class="form-header">
+          <h2>{{ t('fitr_title') }}</h2>
+          <p class="form-desc">{{ t('fitr_desc') }}</p>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>{{ t('persons') }}</label>
+            <input type="number" [(ngModel)]="fitrForm.numberOfPersons" min="1" placeholder="1">
+          </div>
+          <div class="field-group">
+            <label>{{ t('grain_price') }} ({{ selectedCurrency.code }})</label>
+            <input type="number" [(ngModel)]="fitrForm.stapleGrainPricePerKg" min="0"
+              [placeholder]="selectedCurrency.defaultGrainPrice">
+          </div>
+        </div>
+        <div class="fitr-info">
+          {{ t('fitr_per_person') }}: 2.5 × {{ fitrForm.stapleGrainPricePerKg }}
+          = <strong>{{ formatNumber(fitrPerPerson) }} {{ selectedCurrency.code }}</strong>
+        </div>
+      </div>
+
+      <!-- ═══ BUTTON ═══ -->
+      <button class="calculate-btn" (click)="calculate()" [disabled]="loading">
+        <span class="btn-inner">
+          {{ t('calculate') }}
+          <span *ngIf="loading" class="btn-spinner"></span>
+        </span>
+      </button>
+
+      <div *ngIf="error" class="error-card">⚠️ {{ error }}</div>
+
+    </div><!-- /form-card -->
+
+    <!-- ═══ RESULT ═══ -->
+    <div *ngIf="result" class="result-card" [class.due]="result.zakatDue" [class.not-due]="!result.zakatDue">
+      <div class="result-header">
+        <div class="result-type">{{ result.typeAr }}</div>
+        <div class="result-badge" [class.green]="result.zakatDue" [class.gray]="!result.zakatDue">
+          {{ result.zakatDue ? t('zakat_due_label') : t('zakat_not_due_label') }}
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-item" *ngIf="result.totalAssets > 0">
+          <span class="result-label">{{ t('total_assets') }}</span>
+          <span class="result-value">{{ formatNumber(result.totalAssets) }} {{ result.currency }}</span>
+        </div>
+        <div class="result-item" *ngIf="result.nisabValue > 0">
+          <span class="result-label">{{ t('nisab_label') }}</span>
+          <span class="result-value">{{ formatNumber(result.nisabValue) }} {{ result.currency }}</span>
+        </div>
+        <div class="result-item highlight" *ngIf="result.zakatDue">
+          <span class="result-label">{{ t('zakat_amount') }}</span>
+          <span class="result-value gold">{{ formatNumber(result.zakatAmount) }} {{ result.currency }}</span>
+        </div>
+        <div class="result-item" *ngIf="result.zakatRate > 0">
+          <span class="result-label">{{ t('zakat_rate') }}</span>
+          <span class="result-value">{{ result.zakatRate }}%</span>
+        </div>
+      </div>
+
+      <div class="result-notes">
+        <strong>{{ t('notes_label') }}:</strong>
+        {{ ls.lang() === 'ar' ? result.notesAr : result.notes }}
+      </div>
+
+      <div class="result-reminder" *ngIf="result.zakatDue">
+        <p>{{ t('ayah') }}</p>
+        <small>{{ t('ayah_ref') }}</small>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="app-footer">
+    <p>{{ t('footer_text') }}</p>
+    <small>{{ t('footer_note') }}</small>
+    <div class="footer-signature">
+      <span class="sig-line"></span>
+      <span class="sig-text">
+        Developed by <strong>Ing. Aya Fekih Romdhane</strong>
+        &nbsp;©&nbsp;{{ currentYear }}
+      </span>
+      <span class="sig-line"></span>
+    </div>
+  </footer>
+
+</div>

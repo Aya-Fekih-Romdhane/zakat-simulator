@@ -1,0 +1,40 @@
+# ── Maven / Spring Boot ──
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ── Angular / Node ──
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/cache/
+frontend/.sass-cache/
+frontend/coverage/
+frontend/npm-debug.log
+frontend/yarn-error.log
+
+# ── IDEs ──
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.history/
+*.sublime-workspace
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Env / secrets ──
+.env
+.env.local
+application-local.properties
+
+# ── Claude Code ──
+.claude/
