@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Green rounded background -->
+  <rect width="64" height="64" rx="11" fill="#1a5c38"/>
+
+  <!-- Crescent: gold disk with green cut-out -->
+  <circle cx="24" cy="36" r="19" fill="#c9a84c"/>
+  <circle cx="33" cy="28" r="15" fill="#1a5c38"/>
+
+  <!-- 5-pointed star, top-right -->
+  <polygon
+    points="
+      48,4
+      50.6,11.5 58.5,11.5
+      52.3,16.2 54.9,23.7
+      48,19 41.1,23.7
+      43.7,16.2 37.5,11.5
+      45.4,11.5"
+    fill="#c9a84c"/>
+</svg>
